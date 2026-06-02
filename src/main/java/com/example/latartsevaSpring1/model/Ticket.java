@@ -19,7 +19,7 @@ public class Ticket {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private TicketStatus status = TicketStatus.NEW;
+    private TicketStatus status; // Убрали = TicketStatus.NEW
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -29,20 +29,6 @@ public class Ticket {
 
     public Ticket() {}
 
-    public Ticket(String title, String description, TicketStatus status, String customerName) {
-        this.title = title;
-        this.description = description;
-        this.status = status;
-        this.customerName = customerName;
-    }
-
-    @PrePersist
-    public void onCreate() {
-        if (createdAt == null) createdAt = LocalDateTime.now();
-        if (status == null) status = TicketStatus.NEW;
-    }
-
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }

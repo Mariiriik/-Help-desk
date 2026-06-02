@@ -1,32 +1,50 @@
 package com.example.latartsevaSpring1.controller;
 
-import com.example.latartsevaSpring1.repository.TicketRepository;
+import com.example.latartsevaSpring1.dto.TicketCreateDto;
+import com.example.latartsevaSpring1.model.Ticket;
+import com.example.latartsevaSpring1.service.TicketService;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
+@RequestMapping("/tickets")
 public class TicketController {
 
-    private final TicketRepository ticketRepository;
+    private final TicketService ticketService;
 
-    public TicketController(TicketRepository ticketRepository) {
-        this.ticketRepository = ticketRepository;
+    public TicketController(TicketService ticketService) {
+        this.ticketService = ticketService;
     }
 
-    @GetMapping("/tickets")
-    public String tickets(Model model) {
-        model.addAttribute("tickets", ticketRepository.findAllByOrderByCreatedAtDesc());
+    @GetMapping
+    public String showTickets(Model model) {
+        model.addAttribute("tickets", ticketService.getAllTickets());
         return "tickets";
     }
-    @GetMapping("/tickets/customer")
-    public String ticketsByCustomer(@RequestParam(required = false) String name, Model model) {
-        if (name != null && !name.trim().isEmpty()) {
-            model.addAttribute("tickets", ticketRepository.findByCustomerNameContainingIgnoreCase(name));
-        } else {
-            model.addAttribute("tickets", ticketRepository.findAllByOrderByCreatedAtDesc());
+
+    @GetMapping("/new")
+    public String showCreateForm(Model model) {
+        model.addAttribute("ticket", new TicketCreateDto());
+        return "ticket-form";
+    }
+
+    @PostMapping
+    public String createTicket(
+            @Valid @ModelAttribute("ticket") TicketCreateDto dto,
+            BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "ticket-form";
         }
-        return "tickets"; // используем тот же шаблон
+        Ticket saved = ticketService.createTicket(dto);
+        return "redirect:/tickets/" + saved.getId() + "/success";
+    }
+
+    @GetMapping("/{id}/success")
+    public String showSuccess(@PathVariable Long id, Model model) {
+        model.addAttribute("ticket", ticketService.getTicketById(id));
+        return "ticket-success";
     }
 }
